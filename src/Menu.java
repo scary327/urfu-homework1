@@ -36,6 +36,8 @@ public class Menu {
                 case 2 -> loadFromFile();
                 case 3 -> processData();
                 case 4 -> showAll();
+                case 5 -> showByNumber();
+                case 6 -> removeByNumber();
                 case 0 -> {
                     System.out.println("Завершение работы программы...");
                     return;
@@ -53,6 +55,8 @@ public class Menu {
                 2. Загрузить студентов из файла
                 3. Обработать данные
                 4. Показать всех студентов
+                5. Показать студента по номеру
+                6. Удалить студента по номеру
                 0. Выход""");
     }
 
@@ -119,6 +123,46 @@ public class Menu {
             System.out.println("Список пуст.");
             return;
         }
-        service.getAll().forEach(System.out::println);
+        printNumbered(service.getAll());
+    }
+
+    private void showByNumber() {
+        if (service.isEmpty()) {
+            System.out.println("Список пуст.");
+            return;
+        }
+        int number = readOption("Номер студента (1-" + service.size() + "): ", service.size());
+        System.out.println(service.get(number - 1));
+    }
+
+    private void removeByNumber() {
+        if (service.isEmpty()) {
+            System.out.println("Список пуст.");
+            return;
+        }
+        int number = readOption("Номер студента для удаления (1-" + service.size() + "): ", service.size());
+        Student removed = service.remove(number - 1);
+        System.out.println("Удалён: " + removed);
+    }
+
+    private int readOption(String prompt, int max) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                int option = Integer.parseInt(scanner.nextLine().trim());
+                if (option >= 1 && option <= max) {
+                    return option;
+                }
+            } catch (NumberFormatException e) {
+                // некорректный ввод — сообщение ниже
+            }
+            System.out.println("Ошибка: введите число от 1 до " + max + ".");
+        }
+    }
+
+    private void printNumbered(List<Student> students) {
+        for (int i = 0; i < students.size(); i++) {
+            System.out.println((i + 1) + ". " + students.get(i));
+        }
     }
 }
