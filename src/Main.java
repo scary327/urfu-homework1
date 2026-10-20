@@ -1,5 +1,5 @@
 void main() {
-    Student student = new Student("Иванов Иван", 4.5, "123456");
-    
-    System.out.println(student);
+    Scanner scanner = new Scanner(System.in);
+    StudentService service = new StudentService();
+    new Menu(scanner, service).run();
 }
