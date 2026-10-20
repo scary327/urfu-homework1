@@ -1,8 +1,16 @@
+import java.io.IOException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Scanner;
 
 public class Menu {
+    private static final String DEFAULT_FILE = "students.csv";
+
     private final Scanner scanner;
     private final StudentService service;
+    private final StudentFileReader fileReader = new StudentFileReader();
 
     public Menu(Scanner scanner, StudentService service) {
         this.scanner = scanner;
@@ -49,15 +57,61 @@ public class Menu {
     }
 
     private void addManually() {
-        System.out.println("TODO: добавление вручную");
+        try {
+            System.out.print("Введите ФИО: ");
+            String name = scanner.nextLine();
+            System.out.print("Введите средний балл (от 2 до 5): ");
+            double averageGrade = InputParser.parseGrade(scanner.nextLine());
+            System.out.print("Введите номер зачётки (6 цифр): ");
+            String recordBookNumber = scanner.nextLine().trim();
+
+            service.add(new Student(name, averageGrade, recordBookNumber));
+            System.out.println("Студент добавлен.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Ошибка: " + e.getMessage());
+        }
     }
 
     private void loadFromFile() {
-        System.out.println("TODO: загрузка из файла");
+        System.out.print("Введите путь к файлу (Enter — " + DEFAULT_FILE + "): ");
+        String input = scanner.nextLine().trim();
+
+        try {
+            Path path = Path.of(input.isEmpty() ? DEFAULT_FILE : input);
+            List<Student> loaded = fileReader.read(path);
+            service.addAll(loaded);
+            System.out.println("Загружено студентов: " + loaded.size());
+        } catch (InvalidPathException e) {
+            System.out.println("Ошибка: некорректный путь: " + input);
+        } catch (NoSuchFileException e) {
+            System.out.println("Ошибка: файл не найден: " + e.getFile());
+        } catch (IOException e) {
+            System.out.println("Ошибка чтения файла: " + e.getMessage());
+        }
     }
 
     private void processData() {
-        System.out.println("TODO: обработка данных");
+        if (service.isEmpty()) {
+            System.out.println("Список пуст — сначала добавьте студентов.");
+            return;
+        }
+
+        System.out.print("Минимальный средний балл: ");
+        double minGrade;
+        try {
+            minGrade = InputParser.parseGrade(scanner.nextLine());
+        } catch (IllegalArgumentException e) {
+            System.out.println("Ошибка: " + e.getMessage());
+            return;
+        }
+
+        List<String> result = service.getStudentsWithGradeAtLeast(minGrade);
+        if (result.isEmpty()) {
+            System.out.println("Нет студентов с баллом от " + minGrade);
+            return;
+        }
+        System.out.println("Студенты с баллом от " + minGrade + " (по убыванию балла):");
+        result.forEach(System.out::println);
     }
 
     private void showAll() {
