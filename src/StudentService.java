@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -40,5 +41,11 @@ public class StudentService {
                 .sorted(Comparator.comparingDouble(Student::getAverageGrade).reversed())
                 .map(student -> String.format("%s — %.2f", student.getName(), student.getAverageGrade()))
                 .toList();
+    }
+
+    public List<Student> getSorted(SortAlgorithm<Student> algorithm, Comparator<Student> comparator) {
+        List<Student> copy = new ArrayList<>(getAll());
+        algorithm.sort(copy, comparator);
+        return copy;
     }
 }

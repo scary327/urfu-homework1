@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -11,6 +12,10 @@ public class Menu {
     private final Scanner scanner;
     private final StudentService service;
     private final StudentFileReader fileReader = new StudentFileReader();
+    private final List<SortAlgorithm<Student>> sortAlgorithms = List.of(
+            new BubbleSort<>(),
+            new InsertionSort<>()
+    );
 
     public Menu(Scanner scanner, StudentService service) {
         this.scanner = scanner;
@@ -38,6 +43,7 @@ public class Menu {
                 case 4 -> showAll();
                 case 5 -> showByNumber();
                 case 6 -> removeByNumber();
+                case 7 -> sortStudents();
                 case 0 -> {
                     System.out.println("Завершение работы программы...");
                     return;
@@ -57,6 +63,7 @@ public class Menu {
                 4. Показать всех студентов
                 5. Показать студента по номеру
                 6. Удалить студента по номеру
+                7. Отсортировать студентов
                 0. Выход""");
     }
 
@@ -143,6 +150,47 @@ public class Menu {
         int number = readOption("Номер студента для удаления (1-" + service.size() + "): ", service.size());
         Student removed = service.remove(number - 1);
         System.out.println("Удалён: " + removed);
+    }
+
+    private void sortStudents() {
+        if (service.isEmpty()) {
+            System.out.println("Список пуст — сначала добавьте студентов.");
+            return;
+        }
+
+        SortAlgorithm<Student> algorithm = chooseAlgorithm();
+        Comparator<Student> comparator = chooseComparator();
+
+        List<Student> sorted = service.getSorted(algorithm, comparator);
+        System.out.println("Результат (" + algorithm.getName() + "):");
+        printNumbered(sorted);
+    }
+
+    private SortAlgorithm<Student> chooseAlgorithm() {
+        System.out.println("Алгоритм сортировки:");
+        for (int i = 0; i < sortAlgorithms.size(); i++) {
+            System.out.println((i + 1) + ". " + sortAlgorithms.get(i).getName());
+        }
+        int choice = readOption("Выберите алгоритм: ", sortAlgorithms.size());
+        return sortAlgorithms.get(choice - 1);
+    }
+
+    private Comparator<Student> chooseComparator() {
+        System.out.println("""
+                Поле для сортировки:
+                1. Средний балл
+                2. ФИО""");
+        int field = readOption("Выберите поле: ", 2);
+        Comparator<Student> comparator = field == 1
+                ? Comparator.comparingDouble(Student::getAverageGrade)
+                : Comparator.comparing(Student::getName);
+
+        System.out.println("""
+                Направление:
+                1. По возрастанию
+                2. По убыванию""");
+        int direction = readOption("Выберите направление: ", 2);
+        return direction == 1 ? comparator : comparator.reversed();
     }
 
     private int readOption(String prompt, int max) {
